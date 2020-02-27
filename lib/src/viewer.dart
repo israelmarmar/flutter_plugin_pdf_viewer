@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_plugin_pdf_viewer/flutter_plugin_pdf_viewer.dart';
 import 'package:numberpicker/numberpicker.dart';
-import 'tooltip.dart';
 
 enum IndicatorPosition { topLeft, topRight, bottomLeft, bottomRight }
 
-class PDFViewer extends StatefulWidget {
+class PDFViewer2 extends StatefulWidget {
   final PDFDocument document;
   final Color indicatorText;
   final Color indicatorBackground;
@@ -14,10 +13,12 @@ class PDFViewer extends StatefulWidget {
   final bool showPicker;
   final bool showNavigation;
   final PDFViewerTooltip tooltip;
+  final int pageFirst;
 
-  PDFViewer(
+  PDFViewer2(
       {Key key,
       @required this.document,
+      this.pageFirst = 1,
       this.indicatorText = Colors.white,
       this.indicatorBackground = Colors.black54,
       this.showIndicator = true,
@@ -30,40 +31,53 @@ class PDFViewer extends StatefulWidget {
   _PDFViewerState createState() => _PDFViewerState();
 }
 
-class _PDFViewerState extends State<PDFViewer> {
+class _PDFViewerState extends State<PDFViewer2> {
   bool _isLoading = true;
   int _pageNumber = 1;
   int _oldPage = 0;
   PDFPage _page;
-  List<PDFPage> _pages = List();
+  List<PDFPage> _pages;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _oldPage = 0;
-    _pageNumber = 1;
+    _pageNumber = widget.pageFirst;
     _isLoading = true;
-    _pages.clear();
+    _pages = List(widget.document.count);
     _loadPage();
   }
 
   @override
-  void didUpdateWidget(PDFViewer oldWidget) {
+  void didUpdateWidget(PDFViewer2 oldWidget) {
     super.didUpdateWidget(oldWidget);
     _oldPage = 0;
-    _pageNumber = 1;
+    _pageNumber = widget.pageFirst;
     _isLoading = true;
-    _pages.clear();
+    _pages = List(widget.document.count);
     _loadPage();
   }
 
   _loadPage() async {
     setState(() => _isLoading = true);
     if (_oldPage == 0) {
-      _page = await widget.document.get(page: _pageNumber);
+
+      if(_pages[_pageNumber-1] == null){
+        _page = await widget.document.get(page: _pageNumber);
+        _pages[_pageNumber-1] = _page;
+      }
+      else
+        _page = _pages[_pageNumber-1];
+
     } else if (_oldPage != _pageNumber) {
       _oldPage = _pageNumber;
-      _page = await widget.document.get(page: _pageNumber);
+
+      if(_pages[_pageNumber-1] == null){
+        _page = await widget.document.get(page: _pageNumber);
+        _pages[_pageNumber-1] = _page;
+      }
+      else
+        _page = _pages[_pageNumber-1];
     }
     if(this.mounted) {
       setState(() => _isLoading = false);
